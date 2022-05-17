@@ -28,18 +28,16 @@ def get_clang_format_config_with_columnlimit(rootdir, limit):
         text=True,
     )
     proc.check_returncode()
-    return re.sub(
-        r"(ColumnLimit:\s*)\d+", r"\g<1>{}".format(BREAK_BEFORE), proc.stdout
-    )
+    return re.sub(r"(ColumnLimit:\s*)\d+", f"\\g<1>{BREAK_BEFORE}", proc.stdout)
 
 
 def run_clang_format_on_lines(rootdir, file_to_format, stylepath=None):
     logger = logging.getLogger(__name__)
 
     line_arguments = [
-        "--lines={}:{}".format(start, end)
-        for start, end in file_to_format.lines
+        f"--lines={start}:{end}" for start, end in file_to_format.lines
     ]
+
     assert line_arguments
 
     logger.info(
@@ -52,16 +50,12 @@ def run_clang_format_on_lines(rootdir, file_to_format, stylepath=None):
     cmd = [
         "clang-format",
         "--style=file",
-        # The --assume-filename argument sets the path for the .clang-format
-        # config file implicitly by assuming a different location of the file
-        # to format
         "--assume-filename={}".format(
-            os.path.join(
-                stylepath if stylepath else rootdir, file_to_format.filename
-            )
+            os.path.join(stylepath or rootdir, file_to_format.filename)
         ),
         *line_arguments,
     ]
+
 
     with open(filename) as fp:
         logger.debug("Executing: %r", cmd)

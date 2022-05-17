@@ -24,7 +24,7 @@ def find_qt_version():
     if not matchobj:
         return None
 
-    return (int(matchobj.group(1)), int(matchobj.group(2)))
+    return int(matchobj[1]), int(matchobj[2])
 
 
 def main(argv=None):

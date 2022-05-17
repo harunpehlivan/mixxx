@@ -52,7 +52,7 @@ def get_moved_files(
             assert sep == "\0"
 
             move = (old_file, new_file)
-            if include_files and not any(x in include_files for x in move):
+            if include_files and all(x not in include_files for x in move):
                 continue
 
             yield move
@@ -66,9 +66,9 @@ def get_changed_lines(
     logger = logging.getLogger(__name__)
 
     if to_ref:
-        changeset = "{}...{}".format(from_ref if from_ref else "HEAD", to_ref)
+        changeset = f'{from_ref or "HEAD"}...{to_ref}'
     else:
-        changeset = from_ref if from_ref else "HEAD"
+        changeset = from_ref or "HEAD"
 
     # We're using the pre-commit framework which stashes all unstaged changes
     # before running the pre-commit hooks, so we don't need to add `--cached`
@@ -113,28 +113,26 @@ def get_changed_lines(
     current_file = None
     hunk_lines_left = 0
     for line in proc.stdout.decode(errors="replace").splitlines():
-        match_file = re.match(r"^\+\+\+ b/(.*)$", line)
-        if match_file:
+        if match_file := re.match(r"^\+\+\+ b/(.*)$", line):
             # Current line contains a diff filename
             assert hunk_lines_left == 0
-            current_file = match_file.group(1)
+            current_file = match_file[1]
             continue
 
-        match_lineno = re.match(
+        if match_lineno := re.match(
             r"^@@ -(\d+(?:,\d+)?) \+([0-9]+(?:,[0-9]+)?) @@", line
-        )
-        if match_lineno:
+        ):
             # Current line contains a hunk header
             assert current_file is not None
             assert hunk_lines_left == 0
-            start_removed, _, length_removed = match_lineno.group(1).partition(
-                ","
-            )
-            start_added, _, length_added = match_lineno.group(2).partition(",")
+            start_removed, _, length_removed = match_lineno[1].partition(",")
+            start_added, _, length_added = match_lineno[2].partition(",")
             lineno_removed = int(start_removed)
             lineno_added = int(start_added)
-            hunk_lines_left = int(length_removed) if length_removed else 1
-            hunk_lines_left += int(length_added) if length_added else 1
+            hunk_lines_left = (
+                int(length_removed) if length_removed else 1
+            ) + (int(length_added) if length_added else 1)
+
             continue
 
         if hunk_lines_left and line:
@@ -163,14 +161,14 @@ def get_changed_lines(
                 added=line.startswith("+"),
             )
 
-            if filter_lines is None or filter_lines(lineobj):
-                if include_files and lineobj.sourcefile not in include_files:
-                    continue
+            if (filter_lines is None or filter_lines(lineobj)) and (
+                not include_files or lineobj.sourcefile in include_files
+            ):
                 yield lineobj
 
-        # If we reach this part, the line does not contain a diff filename or a
-        # hunk header and does not belong to a hunk. This means that this line
-        # will be ignored implicitly.
+            # If we reach this part, the line does not contain a diff filename or a
+            # hunk header and does not belong to a hunk. This means that this line
+            # will be ignored implicitly.
 
     # Make sure we really parsed all lines from the last hunk
     assert hunk_lines_left == 0
@@ -189,12 +187,14 @@ def get_changed_lines_grouped(
         start_linenumber = None
         last_linenumber = None
         for line in file_lines:
-            if None not in (start_linenumber, last_linenumber):
-                if line.number != last_linenumber + 1:
-                    grouped_linenumbers.append(
-                        (start_linenumber, last_linenumber)
-                    )
-                    start_linenumber = None
+            if (
+                None not in (start_linenumber, last_linenumber)
+                and line.number != last_linenumber + 1
+            ):
+                grouped_linenumbers.append(
+                    (start_linenumber, last_linenumber)
+                )
+                start_linenumber = None
 
             if start_linenumber is None:
                 start_linenumber = line.number

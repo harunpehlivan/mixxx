@@ -44,9 +44,7 @@ else:
 
 
 def prompt(text):
-    if prompt_session:
-        return prompt_session.prompt(text)
-    return input(text)
+    return prompt_session.prompt(text) if prompt_session else input(text)
 
 
 MSG_SYSEX1 = mido.Message.from_bytes([0xF0, 0x00, 0x20, 0x7F, 0x00, 0xF7])
@@ -133,7 +131,7 @@ def main(argv=None):
         try:
             descriptions = dict(load_descriptions(args.xmlfile))
         except Exception:
-            print("Failed to parse XML file: {}".format(args.xmlfile))
+            print(f"Failed to parse XML file: {args.xmlfile}")
             descriptions = {}
     else:
         descriptions = {}
@@ -166,9 +164,10 @@ def main(argv=None):
             "{:30s} {}{}".format(
                 " ".join("0x{:02x}".format(b) for b in message.bytes()),
                 str(message),
-                (" // " + description) if description else "",
+                f" // {description}" if description else "",
             )
         )
+
 
         q.put(message)
 

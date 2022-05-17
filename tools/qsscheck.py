@@ -412,7 +412,7 @@ def main(argv=None):
         skins.update(set(get_skins(args.extra_skins_path)))
 
     if args.skin:
-        skins = set((name, path) for name, path in skins if name == args.skin)
+        skins = {(name, path) for name, path in skins if name == args.skin}
 
     if not skins:
         print("No skins to check")
