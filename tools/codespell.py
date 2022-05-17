@@ -105,7 +105,7 @@ def main(argv: typing.Optional[typing.List[str]] = None) -> int:
     for filename, file_lines in itertools.groupby(
         files_with_added_lines, key=lambda line: line.sourcefile
     ):
-        lines = set(line.number for line in file_lines)
+        lines = {line.number for line in file_lines}
         result |= run_codespell_on_lines(
             rootdir,
             filename,

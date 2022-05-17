@@ -31,21 +31,21 @@ if len(sys.argv) < 2:
 MASTER_SYNC_LAYOUT = False
 MAX_DECKS = 2
 fname = ""
-DECK_ORDER = range(0, 2)
+DECK_ORDER = range(2)
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", ["mastersync", "4decks"])
     for o, a in opts:
-        if o == "--mastersync":
-            # This is an alternative layout for my work on master sync
-            MASTER_SYNC_LAYOUT = True
-        elif o == "--4decks":
+        if o == "--4decks":
             MAX_DECKS = 4
             DECK_ORDER = (2, 0, 1, 3)
+        elif o == "--mastersync":
+            # This is an alternative layout for my work on master sync
+            MASTER_SYNC_LAYOUT = True
     if len(args) > 0:
         fname = args[0]
 except Exception as e:
-    print(str(e))
+    print(e)
     help()
     sys.exit(1)
 
@@ -56,7 +56,7 @@ if fname == "":
 try:
     fh = open(fname, "w")
 except Exception as e:
-    print("Error opening file for write:", str(e))
+    print("Error opening file for write:", e)
     sys.exit(1)
 
 button_definitions = """0x34	0x35	0x36	0x37
@@ -147,7 +147,7 @@ cc_code = 0
 midi_cc = {}
 for cc in cc_controls:
     midi_cc[cc] = []
-    for i in range(0, 4):
+    for _ in range(4):
         midi_cc[cc].append("0x%x" % cc_code)
         cc_code += 1
 
@@ -171,33 +171,6 @@ cc_mapping = {
     "eq2": ["filterMid", "<normal/>"],
     "eq3": ["filterLow", "<normal/>"],
     "slider": ["volume", "<normal/>"],
-}
-
-button_mapping = {
-    "spinknob": ["beatsync", "<button/>"],
-    "knoblight1": ["filterHighKill", "<normal/>"],
-    "knoblight2": ["filterMidKill", "<normal/>"],
-    "knoblight3": ["filterLowKill", "<normal/>"],
-    "button1": {
-        "red": ["pfl", "<normal/>"],
-        "orange": ["beatloop_4", "<button/>"],
-        "green": ["hotcue_1_activate", "<button/>"],
-    },
-    "button2": {
-        "red": ["keylock", "<normal/>"],
-        "orange": ["loop_double", "<button/>"],
-        "green": ["hotcue_2_activate", "<button/>"],
-    },
-    "button3": {
-        "red": ["cue_default", "<button/>"],
-        "orange": ["loop_halve", "<button/>"],
-        "green": ["hotcue_3_activate", "<button/>"],
-    },
-    "button4": {
-        "red": ["play", "<normal/>"],
-        "orange": ["reloop_exit", "<button/>"],
-        "green": ["hotcue_4_activate", "<button/>"],
-    },
 }
 
 if MASTER_SYNC_LAYOUT:
@@ -228,34 +201,6 @@ if MASTER_SYNC_LAYOUT:
         },
     }
 
-
-light_mapping = {  # 'spinknob':'jog',
-    "knoblight1": "filterHighKill",
-    "knoblight2": "filterMidKill",
-    "knoblight3": "filterLowKill",
-    "button1": {
-        "red": "pfl",
-        "orange": "beatloop_4",
-        "green": "hotcue_1_enabled",
-    },
-    "button2": {
-        "red": "keylock",
-        "orange": "loop_double",
-        "green": "hotcue_2_enabled",
-    },
-    "button3": {
-        "red": "cue_default",
-        "orange": "loop_halve",
-        "green": "hotcue_3_enabled",
-    },
-    "button4": {
-        "red": "play",
-        "orange": "loop_enabled",
-        "green": "hotcue_4_enabled",
-    },
-}
-
-if MASTER_SYNC_LAYOUT:
     light_mapping = {  # 'spinknob':'jog',
         "knoblight1": "keylock",
         "knoblight2": "quantize",
@@ -282,55 +227,6 @@ if MASTER_SYNC_LAYOUT:
         },
     }
 
-
-# these aren't worth automating
-master_knobs = """            <control>
-                <group>[Playlist]</group>
-                <key>XoneK2.rightBottomKnob</key>
-                <status>0xBF</status>
-                <midino>0x15</midino>
-                <options>
-                    <Script-Binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Playlist]</group>
-                <key>LoadSelectedIntoFirstStopped</key>
-                <status>0x9F</status>
-                <midino>0x0E</midino>
-                <options>
-                    <normal/>
-                </options>
-            </control>
-            <control>
-                <group>[Master]</group>
-                <key>XoneK2.leftBottomKnob</key>
-                <status>0xBF</status>
-                <midino>0x14</midino>
-                <options>
-                    <Script-Binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Master]</group>
-                <key>XoneK2.shift_on</key>
-                <status>0x9F</status>
-                <midino>0xF</midino>
-                <options>
-                    <Script-Binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Master]</group>
-                <key>XoneK2.shift_on</key>
-                <status>0x8F</status>
-                <midino>0xF</midino>
-                <options>
-                    <Script-Binding/>
-                </options>
-            </control>"""
-
-if MASTER_SYNC_LAYOUT:
     master_knobs = """            <control>
                 <group>[Playlist]</group>
                 <key>XoneK2.rightBottomKnob</key>
@@ -377,29 +273,110 @@ if MASTER_SYNC_LAYOUT:
                 </options>
             </control>"""
 
+else:
+    button_mapping = {
+        "spinknob": ["beatsync", "<button/>"],
+        "knoblight1": ["filterHighKill", "<normal/>"],
+        "knoblight2": ["filterMidKill", "<normal/>"],
+        "knoblight3": ["filterLowKill", "<normal/>"],
+        "button1": {
+            "red": ["pfl", "<normal/>"],
+            "orange": ["beatloop_4", "<button/>"],
+            "green": ["hotcue_1_activate", "<button/>"],
+        },
+        "button2": {
+            "red": ["keylock", "<normal/>"],
+            "orange": ["loop_double", "<button/>"],
+            "green": ["hotcue_2_activate", "<button/>"],
+        },
+        "button3": {
+            "red": ["cue_default", "<button/>"],
+            "orange": ["loop_halve", "<button/>"],
+            "green": ["hotcue_3_activate", "<button/>"],
+        },
+        "button4": {
+            "red": ["play", "<normal/>"],
+            "orange": ["reloop_exit", "<button/>"],
+            "green": ["hotcue_4_activate", "<button/>"],
+        },
+    }
 
-xml = []
-xml.append(
-    """<?xml version='1.0' encoding='utf-8'?>
-<!-- This file automatically generated by make_xone.py. -->
-<MixxxControllerPreset mixxxVersion="" schemaVersion="1">
-    <info>
-        <name>Allen&amp;Heath Xone K2</name>
-        <author>Owen Williams</author>
-        <description>For this mapping to work:
-- Set Xone:K2 midi channel to 16;
-- Set Xone:K2 Latching Layers state to "Switch Matrix" (state 2).
-(See product manual for details.)</description>
-    </info>
-    <controller id="XONE:K2">
-        <scriptfiles>
-            <file filename="Xone-K2-scripts.js" functionprefix="XoneK2"/>
-        </scriptfiles>
-        <controls>"""
-)
+    light_mapping = {  # 'spinknob':'jog',
+        "knoblight1": "filterHighKill",
+        "knoblight2": "filterMidKill",
+        "knoblight3": "filterLowKill",
+        "button1": {
+            "red": "pfl",
+            "orange": "beatloop_4",
+            "green": "hotcue_1_enabled",
+        },
+        "button2": {
+            "red": "keylock",
+            "orange": "loop_double",
+            "green": "hotcue_2_enabled",
+        },
+        "button3": {
+            "red": "cue_default",
+            "orange": "loop_halve",
+            "green": "hotcue_3_enabled",
+        },
+        "button4": {
+            "red": "play",
+            "orange": "loop_enabled",
+            "green": "hotcue_4_enabled",
+        },
+    }
 
+    master_knobs = """            <control>
+                <group>[Playlist]</group>
+                <key>XoneK2.rightBottomKnob</key>
+                <status>0xBF</status>
+                <midino>0x15</midino>
+                <options>
+                    <Script-Binding/>
+                </options>
+            </control>
+            <control>
+                <group>[Playlist]</group>
+                <key>LoadSelectedIntoFirstStopped</key>
+                <status>0x9F</status>
+                <midino>0x0E</midino>
+                <options>
+                    <normal/>
+                </options>
+            </control>
+            <control>
+                <group>[Master]</group>
+                <key>XoneK2.leftBottomKnob</key>
+                <status>0xBF</status>
+                <midino>0x14</midino>
+                <options>
+                    <Script-Binding/>
+                </options>
+            </control>
+            <control>
+                <group>[Master]</group>
+                <key>XoneK2.shift_on</key>
+                <status>0x9F</status>
+                <midino>0xF</midino>
+                <options>
+                    <Script-Binding/>
+                </options>
+            </control>
+            <control>
+                <group>[Master]</group>
+                <key>XoneK2.shift_on</key>
+                <status>0x8F</status>
+                <midino>0xF</midino>
+                <options>
+                    <Script-Binding/>
+                </options>
+            </control>"""
 
-xml.append("<!-- CC Controls (knobs and sliders) -->")
+xml = [
+    """<?xml version='1.0' encoding='utf-8'?>\x1f<!-- This file automatically generated by make_xone.py. -->\x1f<MixxxControllerPreset mixxxVersion="" schemaVersion="1">\x1f    <info>\x1f        <name>Allen&amp;Heath Xone K2</name>\x1f        <author>Owen Williams</author>\x1f        <description>For this mapping to work:\x1f- Set Xone:K2 midi channel to 16;\x1f- Set Xone:K2 Latching Layers state to "Switch Matrix" (state 2).\x1f(See product manual for details.)</description>\x1f    </info>\x1f    <controller id="XONE:K2">\x1f        <scriptfiles>\x1f            <file filename="Xone-K2-scripts.js" functionprefix="XoneK2"/>\x1f        </scriptfiles>\x1f        <controls>""",
+    "<!-- CC Controls (knobs and sliders) -->",
+]
 
 # for i, deck in enumerate(DECK_ORDER):
 #    xml.append("""            <control>
@@ -438,8 +415,6 @@ def get_key_name(key):
         return "button_parameter1"
     if key == "filterMidKill":
         return "button_parameter2"
-    if key == "filterLowKill":
-        return "button_parameter3"
     return key
 
 

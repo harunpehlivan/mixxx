@@ -24,7 +24,7 @@ def url_fetch(url, headers=None, **kwargs):
         ),
     }
     if headers:
-        request_headers.update(headers)
+        request_headers |= headers
     req = urllib.request.Request(url, headers=request_headers, **kwargs)
     return urllib.request.urlopen(req, timeout=10)
 
@@ -140,18 +140,17 @@ def prepare_deployment(args):
         github_run_id = os.getenv("GITHUB_RUN_ID")
         github_server_url = os.getenv("GITHUB_SERVER_URL")
         github_repository = os.getenv("GITHUB_REPOSITORY")
-        metadata.update(
-            {
-                "git_commit_url": (
-                    f"{github_server_url}/{github_repository}/"
-                    f"commit/{commit_id}"
-                ),
-                "build_log_url": (
-                    f"{github_server_url}/{github_repository}/actions/"
-                    f"runs/{github_run_id}"
-                ),
-            }
-        )
+        metadata |= {
+            "git_commit_url": (
+                f"{github_server_url}/{github_repository}/"
+                f"commit/{commit_id}"
+            ),
+            "build_log_url": (
+                f"{github_server_url}/{github_repository}/actions/"
+                f"runs/{github_run_id}"
+            ),
+        }
+
 
     filename_without_ext, file_ext = splitext(args.file)
     download_slug, package_slug = args.slug
@@ -179,12 +178,11 @@ def prepare_deployment(args):
     with open(f"{output_destpath}.sha256sum", mode="w") as fp:
         fp.write(f"{file_sha256}  {output_filename}\n")
 
-    metadata.update(
-        {
-            "file_url": f"{args.dest_url}/{destpath}",
-            "file_sha256_url": f"{args.dest_url}/{destpath}.sha256sum",
-        }
-    )
+    metadata |= {
+        "file_url": f"{args.dest_url}/{destpath}",
+        "file_sha256_url": f"{args.dest_url}/{destpath}.sha256sum",
+    }
+
 
     # Show metadata and files to deploy
     print("Metadata: ", json.dumps(metadata, indent=2, sort_keys=True))
@@ -197,12 +195,9 @@ def prepare_deployment(args):
     if os.getenv("CI") == "true":
         # Set GitHub Actions job output
         print(
-            "::set-output name=artifact-{}-{}::{}".format(
-                download_slug,
-                package_slug,
-                json.dumps(metadata),
-            )
+            f"::set-output name=artifact-{download_slug}-{package_slug}::{json.dumps(metadata)}"
         )
+
 
     return 0
 
@@ -226,7 +221,7 @@ def collect_manifest_data(job_data):
 
         # Make sure that the file actually exists on the download server
         resp = url_fetch(url, method="HEAD")
-        if not resp.status == 200:
+        if resp.status != 200:
             raise LookupError(f"Unable to find URL '{url}' on remote server")
 
         manifest_data[artifact_slug] = artifact_data

@@ -7,10 +7,7 @@ import sys
 
 def createSlice(columns):
     """convert an input string into a slice object"""
-    if columns == "all":
-        return slice(None)
-    # creates a numpy array
-    return np.int64(columns.split(","))
+    return slice(None) if columns == "all" else np.int64(columns.split(","))
 
 
 def combine_files(files):

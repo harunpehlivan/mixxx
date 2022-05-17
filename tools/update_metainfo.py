@@ -19,13 +19,12 @@ def parse_changelog(content):
         if not matchobj:
             continue
 
-        attrib = {
-            "version": matchobj.group("number"),
-        }
+        attrib = {"version": matchobj["number"]}
         try:
             release_date = datetime.datetime.strptime(
-                matchobj.group("date"), " (%Y-%m-%d)"
+                matchobj["date"], " (%Y-%m-%d)"
             ).replace(tzinfo=datetime.timezone.utc)
+
         except ValueError:
             attrib["type"] = "development"
         else:
